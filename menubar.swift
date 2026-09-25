@@ -24,6 +24,16 @@ func candidates() -> String {
             NSString(string: "~/.claude/skills/pr-review-inbox/candidates.py").expandingTildeInPath)
 }
 
+func log(_ line: String) {
+    let stamp = ISO8601DateFormatter().string(from: Date())
+    guard let h = FileHandle(forWritingAtPath: dir + "/review.log") ??
+            (FileManager.default.createFile(atPath: dir + "/review.log", contents: nil)
+             ? FileHandle(forWritingAtPath: dir + "/review.log") : nil) else { return }
+    h.seekToEndOfFile()
+    h.write("\(stamp) \(line)\n".data(using: .utf8)!)
+    try? h.close()
+}
+
 @discardableResult
 func shell(_ cmd: String) -> String {
     let p = Process()
@@ -31,7 +41,7 @@ func shell(_ cmd: String) -> String {
     p.arguments = ["-c", cmd]
     let pipe = Pipe()
     p.standardOutput = pipe
-    p.standardError = Pipe()
+    p.standardError = pipe
     guard (try? p.run()) != nil else { return "" }
     let d = pipe.fileHandleForReading.readDataToEndOfFile()
     p.waitUntilExit()
@@ -40,6 +50,36 @@ func shell(_ cmd: String) -> String {
 
 let herdr = ["/opt/homebrew/bin/herdr", "/usr/local/bin/herdr"]
     .first { FileManager.default.isExecutableFile(atPath: $0) }
+
+func result(_ output: String) -> [String: Any] {
+    guard let d = output.data(using: .utf8),
+          let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
+          let r = j["result"] as? [String: Any] else { return [:] }
+    return r
+}
+
+/// tab create and workspace create both answer with the pane to drive.
+func paneID(_ output: String) -> String? {
+    (result(output)["root_pane"] as? [String: Any])?["pane_id"] as? String
+}
+
+/// Reviews get their own workspace, found by label and made the first time.
+func reviewPane(_ bin: String, _ label: String, _ cwd: String, _ tab: String) -> String? {
+    let listed = result(shell("\(bin) workspace list"))["workspaces"] as? [[String: Any]] ?? []
+    if let id = listed.first(where: { $0["label"] as? String == label })?["workspace_id"] as? String {
+        shell("\(bin) workspace focus '\(id)'")
+        let out = shell("\(bin) tab create --workspace '\(id)' --cwd '\(cwd)' --label '\(tab)' --focus")
+        log("tab in \(label) (\(id)) -> \(out.prefix(200))")
+        return paneID(out)
+    }
+    // no workspace yet: its own first tab is the one to review in
+    let out = shell("\(bin) workspace create --label '\(label)' --cwd '\(cwd)'")
+    log("created workspace \(label) -> \(out.prefix(200))")
+    if let id = (result(out)["workspace"] as? [String: Any])?["workspace_id"] as? String {
+        shell("\(bin) workspace focus '\(id)'")
+    }
+    return paneID(out)
+}
 
 func parse(_ text: String) -> [PR] {
     guard let d = text.data(using: .utf8),
@@ -132,14 +172,15 @@ class Handler: NSObject, NSMenuDelegate {
                 shell("open -na Ghostty --args -e \(kind) '\(ask)'")
                 return
             }
-            let created = shell("\(bin) tab create --cwd '\(cwd)' --label 'review \(pr.spec)' --focus")
-            guard let d = created.data(using: .utf8),
-                  let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
-                  let r = j["result"] as? [String: Any],
-                  let pane = (r["root_pane"] as? [String: Any])?["pane_id"] as? String else { return }
+            guard let pane = reviewPane(bin, setting("workspace", "PR review"), cwd,
+                                        "review \(pr.spec)") else {
+                log("no pane to review \(pr.spec) in - giving up")
+                return
+            }
             let name = "review-" + pr.spec.replacingOccurrences(of: "#", with: "-")
-            shell("\(bin) agent start '\(name)' --kind \(kind) --pane '\(pane)'")
-            shell("\(bin) agent prompt '\(name)' '\(ask)'")
+            log("agent start \(name) --kind \(kind) --pane \(pane) -> " +
+                shell("\(bin) agent start '\(name)' --kind \(kind) --pane '\(pane)' --timeout 60000").prefix(300))
+            log("agent prompt -> " + shell("\(bin) agent prompt '\(name)' '\(ask)'").prefix(300))
         }
     }
 

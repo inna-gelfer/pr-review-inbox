@@ -5,7 +5,8 @@ fresh Claude or Codex session.
 
 - `👀 3` — how many are waiting. Nothing waiting, no icon.
 - Each PR shows why it's there: `amended` (commits landed after your review), `unreviewed`, `tagged`
-- **Review** opens a labelled terminal tab, starts your agent in the repo, and submits `pr-review`
+- **Review** opens a labelled tab in a dedicated **PR review** workspace — reused if it exists,
+  created if it doesn't — starts your agent in the repo checkout, and submits `pr-review`
 - **Skip until it changes** records the PR at its current head, so it stays out until new commits land
 - **Review with** switches between Claude and Codex — both run the same `cs-skills` review
 - Merged and closed PRs drop off by themselves
@@ -45,7 +46,8 @@ review you start and abandon comes back on the next poll, which is the point.
 
 | Path | |
 |---|---|
-| `~/.pr-review-inbox/` | app, agent choice, cached inbox |
+| `~/.pr-review-inbox/` | app, agent choice, cached inbox, `review.log` |
+| herdr workspace `PR review` | where reviews open; rename via `workspace` in the app dir |
 | `~/Library/LaunchAgents/com.pr-review-inbox.badge.plist` | keeps it running |
 
 `reviewed.json` belongs to the skill; Skip writes to it through `candidates.py`, and
