@@ -3,7 +3,7 @@
 A menu-bar badge for the gtforge PRs waiting on your review. Click one to review it in a
 fresh Claude or Codex session.
 
-- `👀 3` — how many are waiting. Nothing waiting, no icon.
+- `👀 3` — how many are waiting; `👀 0` dimmed when nothing is.
 - Each PR shows why it's there: `amended` (commits landed after your review), `unreviewed`, `tagged`
 - **Review** opens a labelled tab in a dedicated **PR review** workspace — reused if it exists,
   created if it doesn't — starts your agent in the repo checkout, and submits `pr-review`

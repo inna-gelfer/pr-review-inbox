@@ -95,9 +95,11 @@ func parse(_ text: String) -> [PR] {
 }
 
 func updateBadge() {
-    // An empty inbox says nothing: hide the item rather than park a 0 in the menu bar.
-    item.isVisible = !rows.isEmpty
+    // Always present, dimmed when empty: an icon that vanishes is indistinguishable
+    // from one that died, and you end up checking whether it still works.
+    item.isVisible = true
     item.button?.title = "👀 \(rows.count)"
+    item.button?.alphaValue = rows.isEmpty ? 0.5 : 1
 }
 
 /// The search takes ~10s, so it runs off the main thread and the menu shows the
