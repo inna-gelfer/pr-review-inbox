@@ -184,7 +184,11 @@ class Handler: NSObject, NSMenuDelegate {
                 log("no pane to review \(pr.spec) in - giving up")
                 return
             }
-            let name = "review-" + pr.spec.replacingOccurrences(of: "#", with: "-")
+            // herdr caps agent names at 32 chars, lowercase; the number leads so a
+            // truncated repo name still names a unique agent
+            let slug = pr.repo.lowercased()
+                .replacingOccurrences(of: "[^a-z0-9_-]", with: "-", options: .regularExpression)
+            let name = String("pr-\(pr.number)-\(slug)".prefix(32))
             log("agent start \(name) --kind \(kind) --pane \(pane) -> " +
                 shell("\(bin) agent start '\(name)' --kind \(kind) --pane '\(pane)' --timeout 60000").prefix(300))
             log("agent prompt -> " + shell("\(bin) agent prompt '\(name)' '\(ask)'").prefix(300))
