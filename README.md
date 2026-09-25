@@ -35,9 +35,10 @@ The skill lives at `~/.claude/skills/pr-review-inbox/`; point elsewhere with
 
 ## How it refreshes
 
-The search takes about 10 seconds, so it runs every 5 minutes in the background and the
-menu shows the last result until a new one lands. **Refresh now** forces it, and skipping
-a PR refreshes immediately so the row disappears at once.
+The search takes about 10 seconds, so it runs every 2 minutes in the background, and again
+when you open the menu if the last one is over a minute old — the rows you're reading are the
+last result until the new one lands. **Refresh now** forces it, and skipping a PR refreshes
+immediately so the row disappears at once.
 
 Reviewing a PR does *not* remove it — the review skill records it when it finishes. A
 review you start and abandon comes back on the next poll, which is the point.

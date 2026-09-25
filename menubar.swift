@@ -11,6 +11,7 @@ struct PR {
 }
 
 var rows: [PR] = []
+var lastPoll = Date.distantPast
 
 func setting(_ name: String, _ fallback: String) -> String {
     let v = (try? String(contentsOfFile: dir + "/" + name, encoding: .utf8))?
@@ -109,6 +110,7 @@ func poll() {
         try? out.write(toFile: dir + "/inbox.json", atomically: true, encoding: .utf8)
         DispatchQueue.main.async {
             rows = fresh
+            lastPoll = Date()
             updateBadge()
         }
     }
@@ -122,6 +124,9 @@ func checkoutOf(_ repo: String) -> String {
 
 class Handler: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
+        // Opening the menu is the moment the number matters: refresh a stale one
+        // behind the rows you are already reading.
+        if Date().timeIntervalSince(lastPoll) > 60 { poll() }
         menu.removeAllItems()
         for (i, pr) in rows.enumerated() {
             let mi = NSMenuItem(title: "[\(pr.reason)]  \(pr.spec) — \(pr.title)",
@@ -214,5 +219,5 @@ if let cached = try? String(contentsOfFile: dir + "/inbox.json", encoding: .utf8
 NSApplication.shared.setActivationPolicy(.accessory)
 updateBadge()
 poll()
-Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { _ in poll() }
+Timer.scheduledTimer(withTimeInterval: 120, repeats: true) { _ in poll() }
 NSApplication.shared.run()
