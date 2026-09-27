@@ -135,6 +135,7 @@ class Handler: NSObject, NSMenuDelegate {
                                 action: nil, keyEquivalent: "")
             let sub = NSMenu()
             for (label, sel) in [("Review in \(setting("agent", "claude"))", #selector(review(_:))),
+                                 ("Copy URL", #selector(copyURL(_:))),
                                  ("Skip until it changes", #selector(skip(_:)))] {
                 let a = NSMenuItem(title: label, action: sel, keyEquivalent: "")
                 a.target = self
@@ -203,6 +204,13 @@ class Handler: NSObject, NSMenuDelegate {
             shell("python3 '\(candidates())' --reviewed '\(spec)'")
             DispatchQueue.main.async { poll() }
         }
+    }
+
+    // For running the review by hand instead of in a fresh session.
+    @objc func copyURL(_ sender: NSMenuItem) {
+        guard let i = sender.representedObject as? Int, i < rows.count else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(rows[i].url, forType: .string)
     }
 
     @objc func setAgent(_ sender: NSMenuItem) {
