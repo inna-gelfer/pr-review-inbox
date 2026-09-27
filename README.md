@@ -4,10 +4,12 @@ A menu-bar badge for the gtforge PRs waiting on your review. Click one to review
 fresh Claude or Codex session.
 
 - `👀 3` — how many are waiting; `👀 0` dimmed when nothing is.
-- Each PR shows why it's there: `amended` (commits landed after your review), `unreviewed`, `tagged`
+- Each PR shows why it's there: `amended` (commits landed after your review), `answered`
+  (no new code, but someone replied to you — a refusal to change still needs a decision),
+  `unreviewed`, `tagged`
 - **Review** opens a labelled tab in a dedicated **PR review** workspace — reused if it exists,
   created if it doesn't — starts your agent in the repo checkout, and submits `pr-review`
-- **Skip until it changes** records the PR at its current head, so it stays out until new commits land
+- **Skip until it changes** records the PR at its current head, so it stays out until new commits land — or until someone replies to you
 - **Review with** switches between Claude and Codex — both run the same `cs-skills` review
 - Merged and closed PRs drop off by themselves
 
