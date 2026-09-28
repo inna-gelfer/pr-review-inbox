@@ -197,9 +197,13 @@ class Handler: NSObject, NSMenuDelegate {
     }
 
     // Records the PR at its current head, so it stays out until new commits land.
+    // Drop it from the count at once - the confirming search takes most of a minute,
+    // and a number that stays put reads as the click having missed.
     @objc func skip(_ sender: NSMenuItem) {
         guard let i = sender.representedObject as? Int, i < rows.count else { return }
         let spec = rows[i].spec
+        rows.remove(at: i)
+        updateBadge()
         DispatchQueue.global().async {
             shell("python3 '\(candidates())' --reviewed '\(spec)'")
             DispatchQueue.main.async { poll() }
