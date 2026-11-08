@@ -31,7 +31,11 @@ echo "$CAND" > "$DIR/candidates-path"
 [ -f "$DIR/agent" ] || echo claude > "$DIR/agent"   # keep an existing choice
 
 echo "==> building"
-swiftc -O -o "$DIR/pr-review-inbox" "$DIR/menubar.swift"
+# Never compile over the running binary: replacing a mapped image invalidates its
+# signature and macOS kills the app (OS_REASON_CODESIGNING).
+swiftc -O -o "$DIR/pr-review-inbox.new" "$DIR/menubar.swift"
+codesign --force --sign - "$DIR/pr-review-inbox.new" >/dev/null 2>&1 || true
+mv -f "$DIR/pr-review-inbox.new" "$DIR/pr-review-inbox"
 
 echo "==> starting"
 mkdir -p "$HOME/Library/LaunchAgents"
