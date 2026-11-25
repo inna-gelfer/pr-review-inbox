@@ -1,4 +1,4 @@
-// Menu-bar badge: gtforge PRs waiting on your review. Click one to review it in a
+// Menu-bar badge: GitHub PRs waiting on your review. Click one to review it in a
 // fresh Claude or Codex session; skip one to drop it until new commits land.
 import Cocoa
 
@@ -7,7 +7,11 @@ let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength
 
 struct PR {
     let repo: String, number: Int, title: String, url: String, sha: String, reason: String
-    var spec: String { "\(repo.hasPrefix("gtforge/") ? String(repo.dropFirst(8)) : repo)#\(number)" }
+    // Repos in the `org` setting are passed to pr-review without the owner prefix.
+    var spec: String {
+        let org = setting("org", "")
+        return "\(!org.isEmpty && repo.hasPrefix(org + "/") ? String(repo.dropFirst(org.count + 1)) : repo)#\(number)"
+    }
 }
 
 var rows: [PR] = []
@@ -120,7 +124,7 @@ func poll() {
 
 func checkoutOf(_ repo: String) -> String {
     let name = repo.contains("/") ? String(repo.split(separator: "/").last!) : repo
-    let path = NSString(string: "~/go/src/github.com/gtforge/\(name)").expandingTildeInPath
+    let path = NSString(string: setting("checkout-root", "~/src") + "/\(name)").expandingTildeInPath
     return FileManager.default.fileExists(atPath: path) ? path : NSHomeDirectory()
 }
 

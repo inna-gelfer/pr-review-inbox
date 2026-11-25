@@ -1,6 +1,6 @@
 # pr-review-inbox 👀
 
-A menu-bar badge for the gtforge PRs waiting on your review. Click one to review it in a
+A menu-bar badge for the GitHub PRs waiting on your review. Click one to review it in a
 fresh Claude or Codex session.
 
 - `👀 3` — how many are waiting; `👀 0` dimmed when nothing is.
@@ -11,7 +11,7 @@ fresh Claude or Codex session.
   created if it doesn't — starts your agent in the repo checkout, and submits `pr-review`
 - **Copy URL** puts the PR link on the clipboard, for running the review by hand
 - **Skip until it changes** records the PR at its current head, so it stays out until new commits land — or until someone replies to you
-- **Review with** switches between Claude and Codex — both run the same `cs-skills` review
+- **Review with** switches between Claude and Codex — both run the same `pr-review` skill
 - Merged and closed PRs drop off by themselves
 
 ## Install
@@ -36,6 +36,14 @@ Uninstall with `~/.pr-review-inbox/uninstall.sh`.
 The skill lives at `~/.claude/skills/pr-review-inbox/`; point elsewhere with
 `PRI_CANDIDATES=/path/to/candidates.py ./install.sh`.
 
+Reviews start in `<checkout-root>/<repo>` (default `~/src`, else your home dir). Set it, and
+the org whose repos `pr-review` takes without the owner prefix, as one-line files:
+
+```bash
+echo ~/code > ~/.pr-review-inbox/checkout-root
+echo my-org > ~/.pr-review-inbox/org
+```
+
 ## How it refreshes
 
 The search takes about 10 seconds, so it runs every 2 minutes in the background, and again
@@ -50,7 +58,7 @@ review you start and abandon comes back on the next poll, which is the point.
 
 | Path | |
 |---|---|
-| `~/.pr-review-inbox/` | app, agent choice, cached inbox, `review.log` |
+| `~/.pr-review-inbox/` | app, agent choice, `org`, `checkout-root`, cached inbox, `review.log` |
 | herdr workspace `PR review` | where reviews open; rename via `workspace` in the app dir |
 | `~/Library/LaunchAgents/com.pr-review-inbox.badge.plist` | keeps it running |
 
